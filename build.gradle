@@ -1,0 +1,133 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.139'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = 'Baubles-Revival'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+// Some environments ship a javac that cannot recompile the decompiled Minecraft sources:
+// NeoFormRuntime then fails with an empty diagnostic and javac cannot read the resulting
+// Eclipse-compiled classes. Passing -PecjWorkaround uses the Eclipse compiler for both the
+// Minecraft sources and the mod sources. See the "Build" section of README.md.
+def ecjWorkaround = project.hasProperty('ecjWorkaround')
+
+neoForge {
+    version = project.neo_version
+
+    neoFormRuntime {
+        useEclipseCompiler = ecjWorkaround
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            systemProperty 'baubles.smoketest', (project.findProperty('smoketest') ?: 'false').toString()
+        }
+        data {
+            clientData()
+            programArguments.addAll '--mod', project.mod_id, '--all',
+                    '--output', file('src/generated/resources/').getAbsolutePath(),
+                    '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    ecj
+}
+
+dependencies {
+    // Only resolved when the -PecjWorkaround build is used.
+    ecj 'org.eclipse.jdt:ecj:3.38.0'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+if (ecjWorkaround) {
+    tasks.register('ecjCompile', Exec) {
+        group = 'build'
+        description = 'Compiles the mod sources with the Eclipse compiler (javac workaround).'
+
+        def outputDir = layout.buildDirectory.dir('classes/java/main')
+        def argFile = layout.buildDirectory.file('ecj-sources.txt')
+
+        inputs.files(sourceSets.main.java)
+        inputs.files(configurations.ecj)
+        outputs.dir(outputDir)
+
+        doFirst {
+            def javaLauncher = javaToolchains.launcherFor(java.toolchain).get()
+            def ecjJar = configurations.ecj.singleFile
+            def sources = sourceSets.main.java.files.collect { it.absolutePath.replace('\\', '/') }
+
+            argFile.get().asFile.parentFile.mkdirs()
+            argFile.get().asFile.text = sources.join('\n')
+            outputDir.get().asFile.mkdirs()
+
+            commandLine javaLauncher.executablePath.asFile.absolutePath,
+                    '-jar', ecjJar.absolutePath,
+                    '-source', '21', '-target', '21',
+                    '-proc:none', '-nowarn', '-encoding', 'UTF-8',
+                    '-cp', sourceSets.main.compileClasspath.asPath,
+                    '-d', outputDir.get().asFile.absolutePath,
+                    '@' + argFile.get().asFile.absolutePath
+        }
+    }
+
+    tasks.named('compileJava') {
+        enabled = false
+    }
+
+    tasks.named('classes') {
+        dependsOn 'ecjCompile'
+    }
+}
+
+// Expand mod metadata placeholders
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            neo_version_range      : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description        : mod_description
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+}

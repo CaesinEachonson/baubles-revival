@@ -1,0 +1,33 @@
+package baubles.api;
+
+/**
+ * Describes which bauble slots an item may be placed in.
+ *
+ * @author Azanor
+ */
+public enum BaubleType {
+    AMULET(0),
+    RING(1, 2),
+    BELT(3),
+    TRINKET(0, 1, 2, 3, 4, 5, 6),
+    HEAD(4),
+    BODY(5),
+    CHARM(6);
+
+    private final int[] validSlots;
+
+    BaubleType(int... validSlots) {
+        this.validSlots = validSlots;
+    }
+
+    public boolean hasSlot(int slot) {
+        for (int s : validSlots) {
+            if (s == slot) return true;
+        }
+        return false;
+    }
+
+    public int[] getValidSlots() {
+        return validSlots;
+    }
+}

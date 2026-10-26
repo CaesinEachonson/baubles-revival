@@ -1,0 +1,23 @@
+{
+  "item.baubles.ring": "Miner's Ring",
+  "button.baubles": "Baubles",
+  "button.normal": "Normal",
+  "keybind.baublesinventory": "Baubles Inventory",
+  "container.baubles": "Baubles",
+  "name.AMULET": "Bauble (Amulet)",
+  "name.RING": "Bauble (Ring)",
+  "name.BELT": "Bauble (Belt)",
+  "name.TRINKET": "Bauble (Any)",
+  "name.HEAD": "Bauble (Head)",
+  "name.BODY": "Bauble (Body)",
+  "name.CHARM": "Bauble (Charm)",
+  "commands.baubles.help.alias": "You can also use /baub or /bau instead of /baubles.",
+  "commands.baubles.help.view": "  /baubles view <player>  - show a player's baubles",
+  "commands.baubles.help.clear": "  /baubles clear <player> [<slot>]  - clear one or all bauble slots",
+  "commands.baubles.view.header": "Baubles of %s",
+  "commands.baubles.clear.all": "Cleared all bauble slots of %s",
+  "commands.baubles.clear.all.notify": "All your bauble slots have been cleared by %s",
+  "commands.baubles.clear.slot": "Cleared bauble slot %s of %s",
+  "commands.baubles.clear.slot.notify": "Your bauble slot %s has been cleared by %s",
+  "commands.baubles.invalid_slot": "Invalid slot %s"
+}

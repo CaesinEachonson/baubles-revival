@@ -1,0 +1,11 @@
+# Normalise line endings so the Gradle wrapper keeps working on Linux CI.
+* text=auto
+
+*.gradle  text eol=lf
+*.java    text eol=lf
+*.md      text eol=lf
+*.toml    text eol=lf
+*.json    text eol=lf
+*.yml     text eol=lf
+gradlew   text eol=lf
+*.bat     text eol=crlf
